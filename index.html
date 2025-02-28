@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargando sitio...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-size: 400% 400%;
+            animation: gradientBackground 10s ease infinite;
+        }
+        
+        .loader-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: fixed;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #424242;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.6s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #424242;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .main-content {
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-container" id="loader">
+        <div class="spinner"></div>
+        <h2>Cargando sitio</h2>
+        <p id="loading-text">Conectando...</p>
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar"></div>
+        </div>
+    </div>
+    
+    <div class="main-content" id="content">
+        <iframe id="site-frame" title="Contenido del sitio"></iframe>
+    </div>
+
+    <script>
+        const targetUrl = "https://dys-qu4y.shuttle.app";
+        
+        const loader = document.getElementById('loader');
+        const content = document.getElementById('content');
+        const siteFrame = document.getElementById('site-frame');
+        const progressBar = document.getElementById('progress-bar');
+        const loadingText = document.getElementById('loading-text');
+        
+       
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            siteFrame.src = targetUrl;
+            setupFrameListeners();
+            animateProgress();
+        });
+        
+        function setupFrameListeners() {
+            siteFrame.addEventListener('loadstart', function() {
+                loadingText.textContent = "Iniciando carga...";
+                updateProgress(10);
+            });
+            
+            let progressValue = 10;
+            const progressInterval = setInterval(function() {
+                if (progressValue < 90) {
+                    progressValue += Math.random() * 5;
+                    updateProgress(progressValue);
+                } else {
+                    clearInterval(progressInterval);
+                }
+            }, 100);
+
+            siteFrame.addEventListener('load', function() {
+                clearInterval(progressInterval);
+                completeLoading();
+            });
+            
+            siteFrame.addEventListener('error', function() {
+                loadingText.textContent = "Error al cargar. Reintentando...";
+                setTimeout(function() {
+                    siteFrame.src = targetUrl;
+                }, 500);
+            });
+        }
+        function updateProgress(value) {
+            progressBar.style.width = `${value}%`;
+        }
+        
+        function animateProgress() {
+            let startValue = 0;
+            
+            if (siteFrame.contentDocument) {
+                siteFrame.contentDocument.addEventListener('readystatechange', function() {
+                    if (siteFrame.contentDocument.readyState === 'interactive') {
+                        updateProgress(70);
+                        loadingText.textContent = "Casi listo...";
+                    } else if (siteFrame.contentDocument.readyState === 'complete') {
+                        completeLoading();
+                    }
+                });
+            }
+        }
+        
+        function completeLoading() {
+            updateProgress(100);
+            loadingText.textContent = "¡Listo!";
+            
+            setTimeout(function() {
+                loader.style.opacity = "0";
+                content.style.opacity = "1";
+                
+                setTimeout(function() {
+                    loader.style.display = "none";
+                }, 300);
+            }, 200);
+        }
+    </script>
+</body>
+</html>
